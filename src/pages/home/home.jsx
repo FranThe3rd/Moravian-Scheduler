@@ -2,6 +2,7 @@ import React from "react";
 import "./home.css";
 import { motion } from "framer-motion";
 import { CalendarDays, FileSpreadsheet, Search, Clock, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router";
 
 const iconVariants = {
   initial: { opacity: 0, y: 20 },
@@ -13,11 +14,17 @@ const iconVariants = {
 };
 
 const Home = () => {
+  const navigate = useNavigate();
+
+
+
   return (
     <div className="home">
       <header className="header">
         <h1 className="logo">Moravian Scheduler</h1>
-        <button className="view-btn">VIEW CLASSES</button>
+        <button onClick={()=> {
+          navigate('/courses')
+        }} className="view-btn">VIEW CLASSES</button>
       </header>
 
       <main className="main">
