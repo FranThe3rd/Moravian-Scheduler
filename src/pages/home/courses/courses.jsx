@@ -21,11 +21,20 @@ const Courses = () => {
         }
     };
 
+    const courseTypeTooltip = {
+        CL: "Classroom / Lecture-based",
+        OS: "Online Synchronous (live online)",
+        OL: "Online Asynchronous (self-paced)",
+        HY: "Hybrid (mix of in-person + online)",
+        LB: "Lab course",
+        IN: "Internship",
+        HN: "Honors course",
+        TR: "Travel / Special term course",
+        WI: "Writing Intensive",
+        "N/A": "Not applicable / Not categorized",
+    };
 
     const fetchCourses = async () => {
-
-
-
         setLoading(true);
         let url = `${BASE_URL}/all`;
         if (searchType !== "all" && query.trim() !== "") {
@@ -61,7 +70,13 @@ const Courses = () => {
                 ← Home
             </button>
 
-            <h1>Moravian Courses Dashboard</h1>
+            <motion.h1
+                initial={{ opacity: 0, y: -30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                Moravian Courses Dashboard
+            </motion.h1>
 
             <div className="search-container">
                 <select
@@ -116,7 +131,15 @@ const Courses = () => {
                             <p><strong>Credits:</strong> {course.unitsCredits || "N/A"}</p>
                             <p><strong>Max Enrollment:</strong> {course.maxEnr || "N/A"}</p>
                             <p><strong>Subterm:</strong> {getSubtermText(course.subterm)}</p>
-                            <p><strong>Course Type:</strong> {course.courseType || "N/A"}</p>
+                            <p>
+                                <strong>Course Type:</strong>{" "}
+                                <span className="tooltip">
+                                    {course.courseType || "N/A"}
+                                    <span className="tooltiptext">
+                                        {courseTypeTooltip[course.courseType] || "Unknown"}
+                                    </span>
+                                </span>
+                            </p>
                             <p>
                                 <strong>Term:</strong>{" "}
                                 {course.startDate && course.endDate
