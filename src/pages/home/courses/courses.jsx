@@ -19,7 +19,7 @@ const Courses = () => {
 
 
 
-    const BASE_URL = "http://localhost:8080/api/v1/moraviancourses";
+const BASE_URL = "http://ec2-3-94-106-95.compute-1.amazonaws.com:8080/api/v1/moraviancourses";
 
 
     const createGoogleCalendarLink = (course) => {
