@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../../../auth/firebase"; 
+import { auth } from "../../../auth/firebase";
+import { db } from "../../../auth/firebase";
+import { doc, setDoc, updateDoc, arrayUnion } from "firebase/firestore";
+
 import "./courses.css";
 
 const Courses = () => {
@@ -17,56 +20,85 @@ const Courses = () => {
 
 
     const createGoogleCalendarLink = (course) => {
-    if (!course.startDate || !course.endTime || !course.startTime) return "#";
+        if (!course.startDate || !course.endTime || !course.startTime) return "#";
 
-    const title = `${course.courseCode} - ${course.title}`;
+        const title = `${course.courseCode} - ${course.title}`;
 
-    // Google Calendar expects datetime as YYYYMMDDTHHMMSSZ
-    const formatDateTime = (date, time) => {
-        const dt = new Date(`${date}T${time}`);
-        return dt.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+        // Google Calendar expects datetime as YYYYMMDDTHHMMSSZ
+        const formatDateTime = (date, time) => {
+            const dt = new Date(`${date}T${time}`);
+            return dt.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+        };
+
+        const startDateTime = formatDateTime(course.startDate, course.startTime);
+        const endDateTime = formatDateTime(course.startDate, course.endTime);
+
+        // Recurrence rule (weekly repeat until endDate)
+        const daysMap = {
+            M: "MO",
+            T: "TU",
+            W: "WE",
+            R: "TH",
+            F: "FR",
+            S: "SA",
+            U: "SU",
+        };
+
+        let byDay = "";
+        if (course.days) {
+            byDay = course.days
+                .split("")
+                .map((d) => daysMap[d] || "")
+                .filter(Boolean)
+                .join(",");
+        }
+
+        const rrule = byDay
+            ? `RRULE:FREQ=WEEKLY;BYDAY=${byDay};UNTIL=${course.endDate.replace(/-/g, "")}T235959Z`
+            : "";
+
+        const details = encodeURIComponent(
+            `Instructor: ${course.instructor}\nCredits: ${course.unitsCredits}`
+        );
+
+        const url = new URL("https://calendar.google.com/calendar/render");
+        url.searchParams.set("action", "TEMPLATE");
+        url.searchParams.set("text", title);
+        url.searchParams.set("dates", `${startDateTime}/${endDateTime}`);
+        url.searchParams.set("details", details);
+        if (rrule) url.searchParams.set("recur", rrule);
+
+        return url.toString();
     };
 
-    const startDateTime = formatDateTime(course.startDate, course.startTime);
-    const endDateTime = formatDateTime(course.startDate, course.endTime);
 
-    // Recurrence rule (weekly repeat until endDate)
-    const daysMap = {
-        M: "MO",
-        T: "TU",
-        W: "WE",
-        R: "TH",
-        F: "FR",
-        S: "SA",
-        U: "SU",
-    };
+    const saveCourseForUser = async (course) => {
+    if (!user) return;
 
-    let byDay = "";
-    if (course.days) {
-        byDay = course.days
-            .split("")
-            .map((d) => daysMap[d] || "")
-            .filter(Boolean)
-            .join(",");
-    }
+    const userRef = doc(db, "users", user.uid);
 
-    const rrule = byDay
-        ? `RRULE:FREQ=WEEKLY;BYDAY=${byDay};UNTIL=${course.endDate.replace(/-/g, "")}T235959Z`
-        : "";
-
-    const details = encodeURIComponent(
-        `Instructor: ${course.instructor}\nCredits: ${course.unitsCredits}`
-    );
-
-    const url = new URL("https://calendar.google.com/calendar/render");
-    url.searchParams.set("action", "TEMPLATE");
-    url.searchParams.set("text", title);
-    url.searchParams.set("dates", `${startDateTime}/${endDateTime}`);
-    url.searchParams.set("details", details);
-    if (rrule) url.searchParams.set("recur", rrule);
-
-    return url.toString();
+    await updateDoc(userRef, {
+        savedCourses: arrayUnion({
+            id: course.id,
+            title: course.title,
+            courseCode: course.courseCode,
+            instructor: course.instructor,
+        })
+    }).catch(async () => {
+        // If doc doesn’t exist yet, create it
+        await setDoc(userRef, {
+            name: user.displayName,
+            email: user.email,
+            savedCourses: [{
+                id: course.id,
+                title: course.title,
+                courseCode: course.courseCode,
+                instructor: course.instructor,
+            }]
+        });
+    });
 };
+
 
 
     const getSubtermText = (subterm) => {
@@ -114,12 +146,12 @@ const Courses = () => {
     }, []);
 
     useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-        setUser(currentUser);
-    });
+        const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+            setUser(currentUser);
+        });
 
-    return () => unsubscribe();
-}, []);
+        return () => unsubscribe();
+    }, []);
 
 
     const formatTime = (time) => {
@@ -135,6 +167,10 @@ const Courses = () => {
             <button className="home-button" onClick={() => navigate("/")}>
                 ← Home
             </button>
+            <button className="user-page-button" onClick={() => navigate("/users")}>
+    👥 Users Page
+</button>
+
 
             <motion.h1
                 initial={{ opacity: 0, y: -30 }}
@@ -220,13 +256,14 @@ const Courses = () => {
                                     })}`
                                     : "TBA"}
                             </p>
-                            <a
-    href={createGoogleCalendarLink(course)}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="add-calendar-btn"
+<a
+  href={createGoogleCalendarLink(course)}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="add-calendar-btn"
+  onClick={() => saveCourseForUser(course)}
 >
-    ➕ Add to Google Calendar
+  ➕ Add to Google Calendar
 </a>
 
                         </motion.div>
@@ -234,8 +271,27 @@ const Courses = () => {
                 </div>
             )}
             <div className="user-info">
-    {user && <p>Signed in as: <strong>{user.displayName}</strong></p>}
+    {user && (
+        <>
+            <p>Signed in as: <strong>{user.displayName}</strong></p>
+            <button
+                className="sign-out-button"
+                onClick={async () => {
+                    try {
+                        await auth.signOut();
+                        setUser(null);
+                        navigate("/login"); // Redirect to login after sign out
+                    } catch (err) {
+                        console.error("Sign out error:", err);
+                    }
+                }}
+            >
+                🔒 Sign Out
+            </button>
+        </>
+    )}
 </div>
+
 
         </div>
     );
