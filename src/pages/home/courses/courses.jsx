@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { auth } from "../../../auth/firebase"; 
 import "./courses.css";
 
 const Courses = () => {
@@ -9,6 +10,8 @@ const Courses = () => {
     const [query, setQuery] = useState("");
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [user, setUser] = useState(null);
+
 
     const BASE_URL = "http://localhost:8080/api/v1/moraviancourses";
 
@@ -55,6 +58,15 @@ const Courses = () => {
     useEffect(() => {
         fetchCourses();
     }, []);
+
+    useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+        setUser(currentUser);
+    });
+
+    return () => unsubscribe();
+}, []);
+
 
     const formatTime = (time) => {
         if (!time) return "TBA";
@@ -158,6 +170,10 @@ const Courses = () => {
                     ))}
                 </div>
             )}
+            <div className="user-info">
+    {user && <p>Signed in as: <strong>{user.displayName}</strong></p>}
+</div>
+
         </div>
     );
 };

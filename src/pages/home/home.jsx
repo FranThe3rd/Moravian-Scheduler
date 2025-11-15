@@ -47,6 +47,9 @@ const Home = () => {
             className="get-started"
             whileHover={{ scale: 1.08 }}
             whileTap={{ scale: 0.96 }}
+            onClick={()=> {
+          navigate('/courses')
+        }}
           >
             GET STARTED <ArrowRight className="icon-right" />
           </motion.button>

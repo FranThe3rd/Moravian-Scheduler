@@ -115,3 +115,17 @@
     opacity: 1;
 }
 
+.user-info {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 15px;
+  color: #002f6c;
+  font-weight: bold;
+  background: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+
