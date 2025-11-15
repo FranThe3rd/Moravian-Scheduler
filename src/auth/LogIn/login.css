@@ -71,6 +71,28 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+
+/* Moravian-specific button */
+.moravian-btn {
+  background: #002b5c;
+  color: white;
+  border: none;
+  margin-bottom: 15px;
+}
+
+.moravian-btn:hover {
+  background: #003b82;
+}
+
+/* Moravian logo styling */
+.moravian-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 56%;   /* makes it circular */
+  object-fit: cover;
+}
+
+
 /* Responsive */
 @media (max-width: 480px) {
   .login-box {
