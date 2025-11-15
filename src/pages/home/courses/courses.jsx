@@ -15,6 +15,60 @@ const Courses = () => {
 
     const BASE_URL = "http://localhost:8080/api/v1/moraviancourses";
 
+
+    const createGoogleCalendarLink = (course) => {
+    if (!course.startDate || !course.endTime || !course.startTime) return "#";
+
+    const title = `${course.courseCode} - ${course.title}`;
+
+    // Google Calendar expects datetime as YYYYMMDDTHHMMSSZ
+    const formatDateTime = (date, time) => {
+        const dt = new Date(`${date}T${time}`);
+        return dt.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    };
+
+    const startDateTime = formatDateTime(course.startDate, course.startTime);
+    const endDateTime = formatDateTime(course.startDate, course.endTime);
+
+    // Recurrence rule (weekly repeat until endDate)
+    const daysMap = {
+        M: "MO",
+        T: "TU",
+        W: "WE",
+        R: "TH",
+        F: "FR",
+        S: "SA",
+        U: "SU",
+    };
+
+    let byDay = "";
+    if (course.days) {
+        byDay = course.days
+            .split("")
+            .map((d) => daysMap[d] || "")
+            .filter(Boolean)
+            .join(",");
+    }
+
+    const rrule = byDay
+        ? `RRULE:FREQ=WEEKLY;BYDAY=${byDay};UNTIL=${course.endDate.replace(/-/g, "")}T235959Z`
+        : "";
+
+    const details = encodeURIComponent(
+        `Instructor: ${course.instructor}\nCredits: ${course.unitsCredits}`
+    );
+
+    const url = new URL("https://calendar.google.com/calendar/render");
+    url.searchParams.set("action", "TEMPLATE");
+    url.searchParams.set("text", title);
+    url.searchParams.set("dates", `${startDateTime}/${endDateTime}`);
+    url.searchParams.set("details", details);
+    if (rrule) url.searchParams.set("recur", rrule);
+
+    return url.toString();
+};
+
+
     const getSubtermText = (subterm) => {
         switch (subterm) {
             case "70": return "Full Semester";
@@ -166,6 +220,15 @@ const Courses = () => {
                                     })}`
                                     : "TBA"}
                             </p>
+                            <a
+    href={createGoogleCalendarLink(course)}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="add-calendar-btn"
+>
+    ➕ Add to Google Calendar
+</a>
+
                         </motion.div>
                     ))}
                 </div>
