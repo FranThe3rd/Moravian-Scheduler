@@ -24,7 +24,6 @@ const Courses = () => {
 
         const title = `${course.courseCode} - ${course.title}`;
 
-        // Google Calendar expects datetime as YYYYMMDDTHHMMSSZ
         const formatDateTime = (date, time) => {
             const dt = new Date(`${date}T${time}`);
             return dt.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
@@ -33,7 +32,6 @@ const Courses = () => {
         const startDateTime = formatDateTime(course.startDate, course.startTime);
         const endDateTime = formatDateTime(course.startDate, course.endTime);
 
-        // Recurrence rule (weekly repeat until endDate)
         const daysMap = {
             M: "MO",
             T: "TU",

@@ -2,7 +2,7 @@ import React from "react";
 import "./login.css";
 import { signInWithGoogle } from "../firebase";
 
-const Login = () => {
+const SignIn = () => {
   const handleLogin = async () => {
     try {
       const result = await signInWithGoogle();
@@ -34,4 +34,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default SignIn;
