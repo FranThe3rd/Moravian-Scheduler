@@ -89,7 +89,7 @@ const Home = () => {
       </main>
 
       <footer className="footer">
-        <p>© 2025 Moravian Scheduler. All rights reserved.</p>
+<p>© 2025 Moravian Scheduler. All rights reserved. Made by Francisco Figueroa.</p>
       </footer>
     </div>
   );
