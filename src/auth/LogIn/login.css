@@ -1,0 +1,80 @@
+/* Whole screen layout */
+.login-root {
+  height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #0a2b63, #00347a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Login box */
+.login-box {
+  width: 360px;
+  background: #ffffff;
+  padding: 40px 32px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  text-align: center;
+  animation: fadeIn 0.7s ease;
+}
+
+/* Title */
+.login-title {
+  font-size: 28px;
+  color: #002b5c; /* Moravian blue */
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+/* Subtitle */
+.login-sub {
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 28px;
+}
+
+/* Google button */
+.google-btn {
+  width: 100%;
+  padding: 12px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #d1d1d1;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  transition: all 0.25s ease;
+}
+
+.google-btn:hover {
+  background: #eff4ff;
+  border-color: #00347a;
+}
+
+/* Google icon */
+.google-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* Subtle fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-box {
+    width: 90%;
+    padding: 30px 20px;
+  }
+}
