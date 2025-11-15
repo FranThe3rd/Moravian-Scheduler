@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { auth, db } from "../../../auth/firebase";
 import { collection, getDocs, doc, updateDoc, arrayRemove } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 import "./userpage.css";
 
 const UserPage = () => {
@@ -8,6 +9,9 @@ const UserPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [filterSameClass, setFilterSameClass] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -18,23 +22,19 @@ const UserPage = () => {
 
   useEffect(() => {
     const fetchUsers = async () => {
-      console.log("Fetching users from Firestore...");
       try {
         const usersCol = collection(db, "users");
         const usersSnapshot = await getDocs(usersCol);
 
         const usersList = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log("Users list:", usersList);
 
-        // Sort: current user on top
-        const sortedUsers = [...usersList];
+        // Sort current user on top
         if (currentUser) {
-          sortedUsers.sort((a, b) => (a.id === currentUser.uid ? -1 : b.id === currentUser.uid ? 1 : 0));
+          usersList.sort((a, b) => (a.id === currentUser.uid ? -1 : b.id === currentUser.uid ? 1 : 0));
         }
 
-        setUsers(sortedUsers);
+        setUsers(usersList);
       } catch (err) {
-        console.error("Error fetching users:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -51,11 +51,10 @@ const UserPage = () => {
       await updateDoc(userRef, {
         savedCourses: arrayRemove(course)
       });
-      // Update local state
       setUsers(prev =>
         prev.map(u =>
           u.id === currentUser.uid
-            ? { ...u, savedCourses: u.savedCourses.filter(c => c.id !== course.id) }
+            ? { ...u, savedCourses: (u.savedCourses || []).filter(c => c.id !== course.id) }
             : u
         )
       );
@@ -67,14 +66,31 @@ const UserPage = () => {
   if (loading) return <p>Loading users...</p>;
   if (error) return <p>Error: {error}</p>;
 
+  // Find Firestore current user object
+  const currentUserData = users.find(u => u.id === currentUser?.uid);
+
+  // Filter users with at least one shared course with current user
+  const filteredUsers = filterSameClass && currentUserData
+    ? users.filter(u =>
+        (u.savedCourses || []).some(course =>
+          (currentUserData.savedCourses || []).some(myCourse => myCourse.id === course.id)
+        )
+      )
+    : users;
+
   return (
     <div className="users-dashboard">
+      <button className="back-btn" onClick={() => navigate("/courses")}>← Back to Courses</button>
+      <button className="filter-btn" onClick={() => setFilterSameClass(!filterSameClass)}>
+        {filterSameClass ? "Show All Users" : "Show Users With Same Classes"}
+      </button>
+
       <h1>All Users & Their Classes</h1>
-      {users.length === 0 ? (
+      {filteredUsers.length === 0 ? (
         <p>No users found</p>
       ) : (
         <div className="users-list">
-          {users.map(user => (
+          {filteredUsers.map(user => (
             <div key={user.id} className="user-card">
               <h2>{user.name}</h2>
               <p>{user.email}</p>
