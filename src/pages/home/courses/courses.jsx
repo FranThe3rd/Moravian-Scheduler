@@ -14,6 +14,9 @@ const Courses = () => {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(false);
     const [user, setUser] = useState(null);
+    const [page, setPage] = useState(0);
+    const coursesPerPage = 150;
+
 
 
     const BASE_URL = "http://localhost:8080/api/v1/moraviancourses";
@@ -71,31 +74,31 @@ const Courses = () => {
 
 
     const saveCourseForUser = async (course) => {
-    if (!user) return;
+        if (!user) return;
 
-    const userRef = doc(db, "users", user.uid);
+        const userRef = doc(db, "users", user.uid);
 
-    await updateDoc(userRef, {
-        savedCourses: arrayUnion({
-            id: course.id,
-            title: course.title,
-            courseCode: course.courseCode,
-            instructor: course.instructor,
-        })
-    }).catch(async () => {
-        // If doc doesn’t exist yet, create it
-        await setDoc(userRef, {
-            name: user.displayName,
-            email: user.email,
-            savedCourses: [{
+        await updateDoc(userRef, {
+            savedCourses: arrayUnion({
                 id: course.id,
                 title: course.title,
                 courseCode: course.courseCode,
                 instructor: course.instructor,
-            }]
+            })
+        }).catch(async () => {
+            // If doc doesn’t exist yet, create it
+            await setDoc(userRef, {
+                name: user.displayName,
+                email: user.email,
+                savedCourses: [{
+                    id: course.id,
+                    title: course.title,
+                    courseCode: course.courseCode,
+                    instructor: course.instructor,
+                }]
+            });
         });
-    });
-};
+    };
 
 
 
@@ -132,6 +135,7 @@ const Courses = () => {
             const res = await fetch(url);
             const data = await res.json();
             setCourses(data);
+            setPage(0);
         } catch (err) {
             console.error("Error fetching courses:", err);
             setCourses([]);
@@ -160,14 +164,19 @@ const Courses = () => {
         return `${h}:${min} ${ampm}`;
     };
 
+    const start = page * coursesPerPage;
+    const paginatedCourses = courses.slice(start, start + coursesPerPage);
+    const totalPages = Math.ceil(courses.length / coursesPerPage);
+
+
     return (
         <div className="courses-dashboard">
             <button className="home-button" onClick={() => navigate("/")}>
                 ← Home
             </button>
             <button className="user-page-button" onClick={() => navigate("/users")}>
-    👥 Users Page
-</button>
+                👥 Users Page
+            </button>
 
 
             <motion.h1
@@ -186,6 +195,8 @@ const Courses = () => {
                     <option value="all">All Courses</option>
                     <option value="code">Course Code</option>
                     <option value="instructor">Instructor</option>
+                    <option value="linc">LINC</option>
+
                     <option value="days">Days</option>
                     <option value="title">Title</option>
                 </select>
@@ -201,6 +212,27 @@ const Courses = () => {
 
                 <button onClick={fetchCourses}>Search</button>
             </div>
+            
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", gap: "10px" }}>
+    {page > 0 && (
+        <button
+            className="pagination-btn"
+            onClick={() => setPage(page - 1)}
+        >
+            ← Previous 150
+        </button>
+    )}
+
+    {page < totalPages - 1 && (
+        <button
+            className="pagination-btn"
+            onClick={() => setPage(page + 1)}
+        >
+            Next 150 →
+        </button>
+    )}
+</div>
+
 
             {loading ? (
                 <p>Loading...</p>
@@ -208,7 +240,7 @@ const Courses = () => {
                 <p>No courses found</p>
             ) : (
                 <div className="courses-cards">
-                    {courses.map((course) => (
+                    {paginatedCourses.map((course) => (
                         <motion.div
                             key={course.id}
                             className="course-card"
@@ -254,41 +286,63 @@ const Courses = () => {
                                     })}`
                                     : "TBA"}
                             </p>
-<a
-  href={createGoogleCalendarLink(course)}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="add-calendar-btn"
-  onClick={() => saveCourseForUser(course)}
->
-  ➕ Add to Google Calendar
-</a>
+                            <a
+                                href={createGoogleCalendarLink(course)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="add-calendar-btn"
+                                onClick={() => saveCourseForUser(course)}
+                            >
+                                ➕ Add to Google Calendar
+                            </a>
 
                         </motion.div>
                     ))}
                 </div>
             )}
+            
             <div className="user-info">
-    {user && (
-        <>
-            <p>Signed in as: <strong>{user.displayName}</strong></p>
-            <button
-                className="sign-out-button"
-                onClick={async () => {
-                    try {
-                        await auth.signOut();
-                        setUser(null);
-                        navigate("/login"); // Redirect to login after sign out
-                    } catch (err) {
-                        console.error("Sign out error:", err);
-                    }
-                }}
-            >
-                🔒 Sign Out
-            </button>
-        </>
+                {user && (
+                    <>
+                        <p>Signed in as: <strong>{user.displayName}</strong></p>
+                        <button
+                            className="sign-out-button"
+                            onClick={async () => {
+                                try {
+                                    await auth.signOut();
+                                    setUser(null);
+                                    navigate("/login"); // Redirect to login after sign out
+                                } catch (err) {
+                                    console.error("Sign out error:", err);
+                                }
+                            }}
+                        >
+                            🔒 Sign Out
+                        </button>
+                    </>
+                )}
+            </div>
+
+                        <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", gap: "10px" }}>
+    {page > 0 && (
+        <button
+            className="pagination-btn"
+            onClick={() => setPage(page - 1)}
+        >
+            ← Previous 150
+        </button>
+    )}
+
+    {page < totalPages - 1 && (
+        <button
+            className="pagination-btn"
+            onClick={() => setPage(page + 1)}
+        >
+            Next 150 →
+        </button>
     )}
 </div>
+
 
 
         </div>

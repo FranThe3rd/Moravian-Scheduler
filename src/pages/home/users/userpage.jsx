@@ -105,14 +105,14 @@ const UserPage = () => {
                           className="delete-course-btn"
                           onClick={() => deleteCourse(course)}
                         >
-                          ❌ Delete
+                        Delete
                         </button>
                       )}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p>No saved classes</p>
+                <p>No saved classes, possibly got opps to keep their info private...</p>
               )}
             </div>
           ))}
