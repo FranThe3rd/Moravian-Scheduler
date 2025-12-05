@@ -41,7 +41,6 @@ These endpoints return JSON course data from the backend:
 | **GET /days**       | Filters by meeting days                |
 | **GET /title**      | Filters by title or keywords           |
 
-*(If needed, I can format these as cURL examples too.)*
 
 ## 📦 Running the Project
 
